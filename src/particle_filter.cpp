@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 50;
+  num_particles = 10;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -76,6 +76,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   //  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
   //  http://www.cplusplus.com/reference/random/default_random_engine/
 
+  cout << "ParticleFilter::prediction..." << endl;
+    
   // generate gaussians
   default_random_engine gen;  
   
@@ -117,6 +119,8 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
 
+  cout << "ParticleFilter::dataAssociation..." << endl;
+  
   double BIGNUMBER = 100000000;    
   int    index4smallestdist;
   double smallestdist;
@@ -174,12 +178,15 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   // Map map_landmarks                        map_landmarks
   
   // test output of input data
+/*
   cout << "sensor_range=" << sensor_range << endl; // 50
   cout << "std_landmark[]=" << std_landmark[0] << " " << std_landmark[1] << endl; // 0.3  0.3
   cout << "observations.size=" << observations.size() << endl; // 11
   cout << "map_landmarks.landmark_list.size()=" << map_landmarks.landmark_list.size() << endl; 
-    
+*/    
 
+  cout << "ParticleFilter::updateWeights..." << endl;
+  
   // observations in global map coordinates
   vector<LandmarkObs> observations_gc;
   
@@ -242,20 +249,30 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       
     }
     
-    // 3a associate id of closest landmarks to measurements
-    dataAssociation(map_landmarks_car, observations_gc);
+    // 3a associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_car)
+    dataAssociation(map_landmarks_car, observations_gc); 
     
     // 4 use actual distance between map_landmarks_car & observations_gc to update weights
     // ============================================================================================
     
     double prob = 1;
     
-    for (int i; i<map_landmarks_car.size(); i++) {
+    for (int i; i<observations_gc.size(); i++) {
+            
+      cout << "i=" << i << endl;
+            
+      // id of associated map_landmarks_car
+      int iass = observations_gc[i].id;
       
-      // local distances between associated landmarks & observations #################
-      double dx = map_landmarks_car[i].x - observations_gc[i].x;  // ##### check #####
-      double dy = map_landmarks_car[i].y - observations_gc[i].y;  // index i twice !? only nearest???
-
+      //cout << "<< 1 >>"  << endl;
+            
+          
+      // local distances between associated landmarks & observations
+      double dx = map_landmarks_car[iass].x - observations_gc[i].x;
+      double dy = map_landmarks_car[iass].y - observations_gc[i].y;
+      
+      //cout << "<< 2 >>"  << endl; // ### code crashes when this is commented out -> Minith ###
+      
       // calculate probability
       double sx = std_landmark[0];
       double sy = std_landmark[1];
@@ -265,29 +282,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       double prob2 = -1.0 * (prob2x + prob2y);
       double prob3 = exp(prob2);
       prob = prob1 * prob3;
-
+      
+      cout << "prob=" << prob << endl;
+              
     }
     
     // 5 update particle weights
     // ============================================================================================
-    
     particles[k].weight *= prob;
-       
-  }
-  
-  
-//################################################################
-/*
-  cout << endl;
-  cout << "map_landmarks.landmark_list.size()=" << map_landmarks.landmark_list.size() << endl; 
-  for (int j; j<map_landmarks.landmark_list.size(); j++) {
-    cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[j].id_i << endl; 
-    cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[j].x_f << endl; 
-    cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[j].y_f << endl;  
-  }
-  cout << "23------------------------------------------------------------------------" << endl;
-  cout << endl;
-*/  
+    weights[k] = particles[k].weight;
+    
+  } 
   
 }
 
@@ -297,6 +302,55 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
+  cout << "ParticleFilter::resample..." << endl;
+/*    
+  // generate gaussians
+  default_random_engine gen;
+  discrete_distribution<> d(weights.begin(), weights.end());
+  
+  for (int k; k<num_particles; k++) {
+    
+    double xp = particles[k].x;
+    double yp = particles[k].y;
+    double weight = particles[k].weight;
+    
+    
+    
+  }
+*/
+  
+/*  
+
+	// Set of current particles
+	std::vector<Particle> particles;
+  
+    // create particle
+    Particle particle;  
+  
+    // set initial values
+    particle.id     = i;
+    particle.x      = x;
+    particle.y      = y;
+    particle.theta  = theta;
+    particle.weight = 1.0;
+  
+  for(int n=0; n<num_particles; ++n) {
+    particles_new.push_back(particles[d(gen)]);
+  }
+*/
+  
+/*
+    // https://discussions.udacity.com/t/resampling-algorithm-using-resampling-wheel/241313/2
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::discrete_distribution<> d(weights.begin(), weights.end());
+    std::map<int, int> m;
+    for(int n=0; n<num_particles; ++n) {
+        particles_new.push_back(particles[d(gen)]);
+    }
+*/
+  
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
