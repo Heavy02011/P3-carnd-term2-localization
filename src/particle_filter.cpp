@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 10;
+  num_particles = 51;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -96,6 +96,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     double yp = particles[k].y;
     double thetap = particles[k].theta;
     
+    // generate noise
+    normal_distribution<double> dist_x(0.0, std_pos[0]);
+    normal_distribution<double> dist_y(0.0, std_pos[1]);
+    normal_distribution<double> dist_theta(0.0, std_pos[2]); 
+    
     // particle state after prediction
     if (yaw_rate > 0.0001) { // turning
       
@@ -116,9 +121,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     particles[k].theta = thetaf; 
     
     // creates a normal (Gaussian) distribution for xf, yf, thetaf
+/*    
     normal_distribution<double> dist_x(xf, std_pos[0]);
     normal_distribution<double> dist_y(yf, std_pos[1]);
     normal_distribution<double> dist_theta(thetaf, std_pos[2]); 
+*/
     
     // add noise to particle
     particles[k].x += dist_x(gen);
@@ -280,6 +287,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // 3a associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_car)
     dataAssociation(map_landmarks_car, observations_gc); 
     
+    
     // 4 use actual distance between map_landmarks_car & observations_gc to update weights
     // ============================================================================================
     
@@ -323,6 +331,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // 5 update particle weights
     // ============================================================================================
     particles[k].weight *= prob;
+    //particles[k].weight = prob;    
     //weights[k] = particles[k].weight; // that cashed the crash
     
   } 
@@ -336,25 +345,26 @@ void ParticleFilter::resample() {
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
   cout << "ParticleFilter::resample..." << endl;
+  
+  // store all weights in one vector
+  for (int k=0; k<num_particles; k++) {
     
+    weights[k] = particles[k].weight;
+    
+  } 
+  
   // generate gaussians
   default_random_engine gen;
   discrete_distribution<> d(weights.begin(), weights.end());
-  //map<double, double> m;
+  //cout << weights.begin() << "   "  << weights.end() << endl;
+  //map<double, double> particles_new;
   
   // new particles vector
   vector<Particle> particles_new;
   
-  for (int k=0; k<num_particles; k++) {
-    
-    // set weights
-    weights[k] = particles[k].weight;
-    
-  }
-  
+  // draw new particles from random distribution
   for (int k=0; k<num_particles; k++) {  
     
-    // draw new particles from random distribution
     particles_new.push_back(particles[d(gen)]);
     
   }
