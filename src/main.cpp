@@ -26,7 +26,7 @@ std::string hasData(std::string s) {
 }
 
 int main()
-{
+{ 
   uWS::Hub h;
 
   //Set up parameters here
@@ -39,13 +39,13 @@ int main()
   // Read map data
   Map map;
   if (!read_map_data("../data/map_data.txt", map)) {
-	  cout << "Error: Could not open map file" << endl;
-	  return -1;
+    cout << "Error: Could not open map file" << endl;
+    return -1;
   }
 
   // Create particle filter
   ParticleFilter pf;
-
+  
   h.onMessage([&pf,&map,&delta_t,&sensor_range,&sigma_pos,&sigma_landmark](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -56,8 +56,6 @@ int main()
 
       auto s = hasData(std::string(data));
       if (s != "") {
-      	
-      	
         auto j = json::parse(s);
         std::string event = j[0].get<std::string>();
         
@@ -67,20 +65,23 @@ int main()
 
           if (!pf.initialized()) {
 
-          	// Sense noisy position data from the simulator
-			double sense_x = std::stod(j[1]["sense_x"].get<std::string>());
-			double sense_y = std::stod(j[1]["sense_y"].get<std::string>());
-			double sense_theta = std::stod(j[1]["sense_theta"].get<std::string>());
+            // Sense noisy position data from the simulator
+            double sense_x = std::stod(j[1]["sense_x"].get<std::string>());
+            double sense_y = std::stod(j[1]["sense_y"].get<std::string>());
+            double sense_theta = std::stod(j[1]["sense_theta"].get<std::string>());
 
-			pf.init(sense_x, sense_y, sense_theta, sigma_pos);
-		  }
-		  else {
-			// Predict the vehicle's next state from previous (noiseless control) data.
-		  	double previous_velocity = std::stod(j[1]["previous_velocity"].get<std::string>());
-			double previous_yawrate = std::stod(j[1]["previous_yawrate"].get<std::string>());
+            pf.init(sense_x, sense_y, sense_theta, sigma_pos);
+            
+            // check particles
+            pf.checkoutput();
+          }
+          else {
+            // Predict the vehicle's next state from previous (noiseless control) data.
+            double previous_velocity = std::stod(j[1]["previous_velocity"].get<std::string>());
+            double previous_yawrate = std::stod(j[1]["previous_yawrate"].get<std::string>());
 
-			pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
-		  }
+            pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
+          }
 
 		  // receive noisy observation data from the simulator
 		  // sense_observations in JSON format [{obs_x,obs_y},{obs_x,obs_y},...{obs_x,obs_y}]

@@ -20,11 +20,54 @@
 using namespace std;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
-	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
-	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
-	// Add random Gaussian noise to each particle.
-	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
+// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
+  cout << "ParticleFilter::init..." << endl;
+    
+  // generate gaussians
+  default_random_engine gen;
+
+  // This line creates a normal (Gaussian) distribution for x, y, psi
+  normal_distribution<double> dist_x_init(x, std[0]);
+  normal_distribution<double> dist_y_init(y, std[1]);
+  normal_distribution<double> dist_theta_init(theta, std[2]); 
+  
+  // 1 Set the number of particles
+  num_particles = 50;
+  
+  // 2 Initialize all particles to first position (based on estimates of 
+  //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
+  for (int i; i < num_particles; i++) {
+
+    // create particle
+    Particle particle;  
+  
+    // set initial values
+    particle.id     = i;
+    particle.x      = x;
+    particle.y      = y;
+    particle.theta  = theta;
+    particle.weight = 1.0;
+  
+/* missing initilizations for particles
+	std::vector<int> associations;
+	std::vector<double> sense_x;
+	std::vector<double> sense_y;
+*/
+  
+    // 3 Add random Gaussian noise to each particle. --> https://discussions.udacity.com/t/norm-distribution/249496/3
+    particle.x += dist_x_init(gen);
+    particle.y += dist_y_init(gen);
+    particle.theta += dist_theta_init(gen);
+    
+    // add particle to vector of particles
+    particles.push_back(particle);
+  
+  }
+  
+  // set initializer flag 
+  is_initialized = true;
+  
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
@@ -32,6 +75,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+  
+  
 
 }
 
@@ -55,6 +100,28 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+  
+      
+      
+}
+
+void ParticleFilter::checkoutput() {
+  
+  ofstream myfile;
+  myfile.open ("log.txt");
+  
+  // check particles    
+  myfile << ("ParticleFilter::updateWeights...");
+  myfile << "num_particles=" << num_particles << endl;
+  
+  for (int i=0;i<num_particles;i++) {
+    myfile << particles[i].id << " ";
+    myfile << particles[i].x << " ";
+    myfile << particles[i].y << " ";
+    myfile << particles[i].theta << endl;
+  }      
+  myfile.close();  
+  
 }
 
 void ParticleFilter::resample() {
@@ -110,3 +177,10 @@ string ParticleFilter::getSenseY(Particle best)
     s = s.substr(0, s.length()-1);  // get rid of the trailing space
     return s;
 }
+
+/******************************************************************************
+ *
+ * own functions
+ *
+ */
+ 

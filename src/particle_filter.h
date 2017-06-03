@@ -42,7 +42,7 @@ public:
 	
 	// Set of current particles
 	std::vector<Particle> particles;
-
+  
 	// Constructor
 	// @param M Number of particles
 	ParticleFilter() : num_particles(0), is_initialized(false) {}
@@ -97,7 +97,9 @@ public:
 	 *   the new set of particles.
 	 */
 	void resample();
-
+  
+  void checkoutput();
+  
 	/*
 	 * Set a particles list of associations, along with the associations calculated world x,y coordinates
 	 * This can be a very useful debugging tool to make sure transformations are correct and assocations correctly connected
@@ -114,6 +116,7 @@ public:
 	const bool initialized() const {
 		return is_initialized;
 	}
+  
 };
 
 
