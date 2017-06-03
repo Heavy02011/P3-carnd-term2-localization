@@ -73,7 +73,7 @@ int main()
             pf.init(sense_x, sense_y, sense_theta, sigma_pos);
             
             // check particles
-            pf.checkoutput();
+            //pf.checkoutput();
           }
           else {
             // Predict the vehicle's next state from previous (noiseless control) data.

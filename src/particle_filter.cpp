@@ -27,7 +27,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   // generate gaussians
   default_random_engine gen;
 
-  // This line creates a normal (Gaussian) distribution for x, y, psi
+  // This line creates a normal (Gaussian) distribution for x, y, theta
   normal_distribution<double> dist_x_init(x, std[0]);
   normal_distribution<double> dist_y_init(y, std[1]);
   normal_distribution<double> dist_theta_init(theta, std[2]); 
@@ -71,12 +71,43 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
-	// TODO: Add measurements to each particle and add random Gaussian noise.
-	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
-	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
-	//  http://www.cplusplus.com/reference/random/default_random_engine/
+  // TODO: Add measurements to each particle and add random Gaussian noise.
+  // NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
+  //  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
+  //  http://www.cplusplus.com/reference/random/default_random_engine/
+
+  // generate gaussians
+  default_random_engine gen;  
   
+  // loop over all particles  
+  for (int k; k<num_particles; k++) {
   
+    // particle state bevor
+    double xp = particles[k].x;
+    double yp = particles[k].y;
+    double thetap = particles[k].theta;
+    
+    // particle state after prediction
+    double xf = xp + velocity / yaw_rate * (sin(thetap + yaw_rate * delta_t) - sin(thetap));
+    double yf = yp + velocity / yaw_rate * (cos(thetap) - cos(thetap + yaw_rate * delta_t));   
+    double thetaf = thetap + yaw_rate * delta_t;
+    
+    // update particles with new values after motion
+    particles[k].x = xf;
+    particles[k].y = yf;   
+    particles[k].theta = thetaf; 
+    
+    // creates a normal (Gaussian) distribution for xf, yf, thetaf
+    normal_distribution<double> dist_x(xf, std_pos[0]);
+    normal_distribution<double> dist_y(yf, std_pos[1]);
+    normal_distribution<double> dist_theta(thetaf, std_pos[2]); 
+    
+    // add noise to particle
+    particles[k].x += dist_x(gen);
+    particles[k].y += dist_y(gen);
+    particles[k].theta += dist_theta(gen);
+    
+  }
 
 }
 
