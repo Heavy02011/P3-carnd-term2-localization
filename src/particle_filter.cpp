@@ -100,9 +100,41 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+      
+  // input                                    description
+  // --------------------------------------------------------------------------                              
+  // double sensor_range                      range of lidar sensor (m)
+  // double std_landmark[]                    std deviation of landmark observations in vehicle coordinates
+  // std::vector<LandmarkObs> observations    landmark observations
+  // Map map_landmarks                        map_landmarks
   
-      
-      
+  cout << "sensor_range=" << sensor_range << endl; // 50
+  cout << "std_landmark[]=" << std_landmark[0] << " " << std_landmark[0] << endl; // 0.3  0.3
+  cout << "observations.size=" << observations.size() << endl; // 11
+/*
+  for (int i; i<observations.size(); i++) {
+    cout << "observations.id=" << observations[i].id << " " << i << endl;
+    cout << "observations.x=" << observations[i].x << endl;
+    cout << "observations.y=" << observations[i].y << endl;
+  }
+*/
+  cout << endl;
+  cout << "map_landmarks.landmark_list.size()=" << map_landmarks.landmark_list.size() << endl; 
+  for (int i; i<map_landmarks.landmark_list.size(); i++) {
+    cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[i].id_i << endl; 
+    cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[i].x_f << endl; 
+    cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[i].y_f << endl;  
+  }
+  cout << "23------------------------------------------------------------------------" << endl;
+  cout << endl;
+/*    
+  cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[0].id_i << endl; 
+  cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[0].x_f << endl; 
+  cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[0].y_f << endl;        
+  cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[42].id_i << endl; 
+  cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[42].x_f << endl; 
+  cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[42].y_f << endl;   
+*/  
 }
 
 void ParticleFilter::checkoutput() {
