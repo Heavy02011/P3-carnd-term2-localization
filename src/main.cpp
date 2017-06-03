@@ -111,6 +111,9 @@ int main()
 				noisy_observations.push_back(obs);
         	}
 
+      // visalization output
+      //std::ostringstream filename; filename << "out/out_particles_" << setfill('0') << setw(6) << i+1 << "_pred.txt"; pf.write(filename.str());    
+          
 		  // Update the weights and resample
 		  pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
 		  pf.resample();
