@@ -185,18 +185,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       
     }
     
-    // 3 eliminate all landmarks that are beyond sensor_range
+    // 3 eliminate all landmarks that are beyond sensor_range: compare landmarks to point distances
     // ============================================================================================
     
     for (int i; i<map_landmarks.landmark_list.size(); i++) {
-      
+            
       // calculate distance between landmarks and measurements in map coordinates
-      double dist = sqrt( pow(map_landmarks.landmark_list[i].x_f - observations_gc[i].x,2) + pow(map_landmarks.landmark_list[i].y_f - observations_gc[i].y,2) );  // maybe store that already here to save time!!
-      //double distance = dist(map_landmarks_car[i].x, map_landmarks_car[i].y, observations_gc[i].x, observations_gc[i].y);
-      
-      if (dist < r_obs2landmark) {
+      double mydist = dist(map_landmarks.landmark_list[i].x_f, map_landmarks.landmark_list[i].y_f, xp, yp);  
+            
+      if (mydist < sensor_range) {
         
-        // generate list of transformed coordinates
+        // generate landmark object
         LandmarkObs mylandmark;
         
         // store the actual values into it
@@ -205,7 +204,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         // save for later use
         map_landmarks_car.push_back(mylandmark);
         
-      }   
+      }  
       
     }
     
@@ -216,9 +215,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
     for (int i; i<map_landmarks_car.size(); i++) {
       
-      // local distances
-      double dx = map_landmarks_car[i].x - observations_gc[i].x;
-      double dy = map_landmarks_car[i].y - observations_gc[i].y;
+      // local distances between associated landmarks & observations #################
+      double dx = map_landmarks_car[i].x - observations_gc[i].x;  // ##### check #####
+      double dy = map_landmarks_car[i].y - observations_gc[i].y;  // index i twice !? only nearest???
 
       // calculate probability
       double sx = std_landmark[0];
