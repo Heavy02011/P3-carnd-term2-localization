@@ -117,6 +117,40 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
 
+  double BIGNUMBER = 100000000;    
+  int    index4smallestdist;
+  double smallestdist;
+  
+  for (int j; j<observations.size(); j++) {
+      
+    double xobs = observations[j].x;      
+    double yobs = observations[j].y;
+  
+    for (int i; i<predicted.size(); i++) {
+    
+      double x = predicted[i].x;
+      double y = predicted[i].y;      
+      smallestdist = BIGNUMBER;
+    
+      // determine distance  
+      double distance = dist(x, y, xobs, yobs); 
+      
+      if (distance < smallestdist) {
+        
+        // set the smallest distance
+        smallestdist = distance;
+        
+        // get according index of landmark
+        index4smallestdist = j;
+        
+        // store that index for 
+        observations[j].id = index4smallestdist;
+        
+      }
+      
+    }
+    
+  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -207,6 +241,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       }  
       
     }
+    
+    // 3a associate id of closest landmarks to measurements
+    dataAssociation(map_landmarks_car, observations_gc);
     
     // 4 use actual distance between map_landmarks_car & observations_gc to update weights
     // ============================================================================================
