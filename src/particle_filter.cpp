@@ -67,7 +67,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   
   // set initializer flag 
   is_initialized = true;
-  
+    
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
@@ -108,53 +108,122 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   // std::vector<LandmarkObs> observations    landmark observations
   // Map map_landmarks                        map_landmarks
   
+  // test output of input data
   cout << "sensor_range=" << sensor_range << endl; // 50
-  cout << "std_landmark[]=" << std_landmark[0] << " " << std_landmark[0] << endl; // 0.3  0.3
+  cout << "std_landmark[]=" << std_landmark[0] << " " << std_landmark[1] << endl; // 0.3  0.3
   cout << "observations.size=" << observations.size() << endl; // 11
-/*
-  for (int i; i<observations.size(); i++) {
-    cout << "observations.id=" << observations[i].id << " " << i << endl;
-    cout << "observations.x=" << observations[i].x << endl;
-    cout << "observations.y=" << observations[i].y << endl;
+  cout << "map_landmarks.landmark_list.size()=" << map_landmarks.landmark_list.size() << endl; 
+    
+
+  // observations in global map coordinates
+  vector<LandmarkObs> observations_gc;
+  
+  // map landmarks seen by the car
+  vector<LandmarkObs> map_landmarks_car;
+  
+  // 1 loop over all particles
+  // ============================================================================================
+  
+  for (int k; k<num_particles; k++) {
+    double xp = particles[k].x;
+    double yp = particles[k].y;
+    double thetap = particles[k].theta;
+    //cout << k << "---> " << xp << " " << yp << " " << thetap << endl;
+    
+    // initialize actual distance between observation and landmark
+    double r_obs2landmark;
+    r_obs2landmark = sensor_range;
+    
+    // 2 transform observations from vehicle into global map coordinates and store them
+    // ============================================================================================
+    
+    for (int i; i<observations.size(); i++) { 
+      
+      // transform from car to map coordinates
+      double xg = observations[i].x * cos(thetap) - observations[i].y * sin(thetap) + xp;
+      double yg = observations[i].x * sin(thetap) + observations[i].y * cos(thetap) + yp;
+      
+      // generate list of transformed coordinates
+      LandmarkObs transformed_observation;
+      
+      // store the actual values into it
+      transformed_observation = {observations[i].id, xg, yg};
+      
+      // save for later use
+      observations_gc.push_back(transformed_observation);
+      
+    }
+    
+    // 3 eliminate all landmarks that are beyond sensor_range
+    // ============================================================================================
+    
+    for (int i; i<map_landmarks.landmark_list.size(); i++) {
+      
+      // calculate distance between landmarks and measurements in map coordinates
+      double dist = sqrt( pow(map_landmarks.landmark_list[i].x_f - observations_gc[i].x,2) + pow(map_landmarks.landmark_list[i].y_f - observations_gc[i].y,2) );  // maybe store that already here to save time!!
+      //double distance = dist(map_landmarks_car[i].x, map_landmarks_car[i].y, observations_gc[i].x, observations_gc[i].y);
+      
+      if (dist < r_obs2landmark) {
+        
+        // generate list of transformed coordinates
+        LandmarkObs mylandmark;
+        
+        // store the actual values into it
+        mylandmark = {map_landmarks.landmark_list[i].id_i, map_landmarks.landmark_list[i].x_f, map_landmarks.landmark_list[i].y_f};
+        
+        // save for later use
+        map_landmarks_car.push_back(mylandmark);
+        
+      }   
+      
+    }
+    
+    // 4 use actual distance between map_landmarks_car & observations_gc to update weights
+    // ============================================================================================
+    
+    double prob = 1;
+    
+    for (int i; i<map_landmarks_car.size(); i++) {
+      
+      // local distances
+      double dx = map_landmarks_car[i].x - observations_gc[i].x;
+      double dy = map_landmarks_car[i].y - observations_gc[i].y;
+
+      // calculate probability
+      double sx = std_landmark[0];
+      double sy = std_landmark[1];
+      double prob1 = 1.0 / (2*M_PI*sx*sy);
+      double prob2x = dx * dx / (2.0*sx*sx);
+      double prob2y = dy * dy / (2.0*sy*sy);
+      double prob2 = -1.0 * (prob2x + prob2y);
+      double prob3 = exp(prob2);
+      prob = prob1 * prob3;
+
+    }
+    
+    // 5 update particle weights
+    // ============================================================================================
+    
+    particles[k].weight *= prob;
+       
   }
-*/
+  
+  
+//################################################################
+/*
   cout << endl;
   cout << "map_landmarks.landmark_list.size()=" << map_landmarks.landmark_list.size() << endl; 
-  for (int i; i<map_landmarks.landmark_list.size(); i++) {
-    cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[i].id_i << endl; 
-    cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[i].x_f << endl; 
-    cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[i].y_f << endl;  
+  for (int j; j<map_landmarks.landmark_list.size(); j++) {
+    cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[j].id_i << endl; 
+    cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[j].x_f << endl; 
+    cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[j].y_f << endl;  
   }
   cout << "23------------------------------------------------------------------------" << endl;
   cout << endl;
-/*    
-  cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[0].id_i << endl; 
-  cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[0].x_f << endl; 
-  cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[0].y_f << endl;        
-  cout << "map_landmarks.landmark_list.id_i=" << map_landmarks.landmark_list[42].id_i << endl; 
-  cout << "map_landmarks.landmark_list.x_f=" << map_landmarks.landmark_list[42].x_f << endl; 
-  cout << "map_landmarks.landmark_list.y_f=" << map_landmarks.landmark_list[42].y_f << endl;   
 */  
+  
 }
 
-void ParticleFilter::checkoutput() {
-  
-  ofstream myfile;
-  myfile.open ("log.txt");
-  
-  // check particles    
-  myfile << ("ParticleFilter::updateWeights...");
-  myfile << "num_particles=" << num_particles << endl;
-  
-  for (int i=0;i<num_particles;i++) {
-    myfile << particles[i].id << " ";
-    myfile << particles[i].x << " ";
-    myfile << particles[i].y << " ";
-    myfile << particles[i].theta << endl;
-  }      
-  myfile.close();  
-  
-}
 
 void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight. 
@@ -216,3 +285,21 @@ string ParticleFilter::getSenseY(Particle best)
  *
  */
  
+void ParticleFilter::checkoutput() {
+  
+  ofstream myfile;
+  myfile.open ("log.txt");
+  
+  // check particles    
+  myfile << ("ParticleFilter::updateWeights...");
+  myfile << "num_particles=" << num_particles << endl;
+  
+  for (int i=0;i<num_particles;i++) {
+    myfile << particles[i].id << " ";
+    myfile << particles[i].x << " ";
+    myfile << particles[i].y << " ";
+    myfile << particles[i].theta << endl;
+  }      
+  myfile.close();  
+  
+}
