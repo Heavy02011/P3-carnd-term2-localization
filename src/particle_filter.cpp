@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 4;
+  num_particles = 100;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -144,6 +144,8 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
+  
+  // calling with --> dataAssociation(map_landmarks_car, observations_gc); 
 
   cout << "ParticleFilter::dataAssociation..." << endl;
   
@@ -161,12 +163,14 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
       double xobs = observations[j].x;      
       double yobs = observations[j].y;
     
+      // before restarting for next observation reset minimum distance
+      smallestdist = BIGNUMBER; //#1
+      
       for (int i=0; i<predicted.size(); i++) {
         //cout << "i=" << i << endl;    
         double x = predicted[i].x;
         double y = predicted[i].y;      
-        smallestdist = BIGNUMBER;
-      
+
         // determine distance  
         double distance = dist(x, y, xobs, yobs); 
         
@@ -176,14 +180,13 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
           smallestdist = distance;
           
           // get according index of landmark
-          index4smallestdist = j;
-          
-          // store that index for 
-          observations[j].id = index4smallestdist;
+          index4smallestdist = i;  //#2
         
         }
       
       }
+      // store nearest neighbor
+      observations[j].id = index4smallestdist; //#3
     
     }
     
@@ -288,7 +291,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     }
     
     // 3a associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_car)
-    dataAssociation(map_landmarks_car, observations_gc); 
+    dataAssociation(map_landmarks_car, observations_gc); //ur
+    //dataAssociation(observations_gc, map_landmarks_car); 
     
       checkoutput();
       
