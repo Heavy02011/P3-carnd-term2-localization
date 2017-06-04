@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 100;
+  num_particles = 2;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -145,7 +145,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
   
-  // calling with --> dataAssociation(map_landmarks_car, observations_gc); 
+  // calling with --> dataAssociation(map_landmarks_carsees, observations_gc); 
 
   cout << "ParticleFilter::dataAssociation..." << endl;
   
@@ -153,8 +153,26 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
   int    index4smallestdist;
   double smallestdist;
   
-  cout << "observations.size()=" << observations.size() << endl;
-  cout << "predicted.size()=" << predicted.size() << endl; 
+  //cout << "observations.size()=" << observations.size() << endl;
+  //cout << "predicted.size()=" << predicted.size() << endl; 
+            cout << endl; 
+            cout << "=== before ============================" << endl;;              
+            cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
+             for (int i=0;i<predicted.size();i++) {
+              cout << predicted[i].id << " ";
+              cout << predicted[i].x << " ";
+              cout << predicted[i].y << endl;
+            }  
+            cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
+            for (int i=0;i<observations.size();i++) {
+              cout << observations[i].id << " ";
+              cout << observations[i].x << " ";
+              cout << observations[i].y << endl;
+            }  
+            
+            cout << "=======================================" << endl;;
+            cout << endl; 
+            
 
   if (predicted.size() > 0) {
   
@@ -191,6 +209,23 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
     }
     
   }
+            cout << endl; 
+            cout << "=== after =============================" << endl;;              
+            cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
+             for (int i=0;i<predicted.size();i++) {
+              cout << predicted[i].id << " ";
+              cout << predicted[i].x << " ";
+              cout << predicted[i].y << endl;
+            }  
+            cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
+            for (int i=0;i<observations.size();i++) {
+              cout << observations[i].id << " ";
+              cout << observations[i].x << " ";
+              cout << observations[i].y << endl;
+            }  
+            
+            cout << "=======================================" << endl;;
+            cout << endl;
     cout << "ParticleFilter::dataAssociation...finished" << endl; 
     
   
@@ -232,6 +267,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   // ============================================================================================
   
   for (int k=0; k<num_particles; k++) {
+    
     double xp = particles[k].x;
     double yp = particles[k].y;
     double thetap = particles[k].theta;
@@ -241,7 +277,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     vector<LandmarkObs> observations_gc;
     
     // map landmarks seen by the car
-    vector<LandmarkObs> map_landmarks_car;    
+    vector<LandmarkObs> map_landmarks_carsees;    
     
     // initialize actual distance between observation and landmark
     double r_obs2landmark;
@@ -284,43 +320,63 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         mylandmark = {map_landmarks.landmark_list[i].id_i, map_landmarks.landmark_list[i].x_f, map_landmarks.landmark_list[i].y_f};
         
         // save for later use
-        map_landmarks_car.push_back(mylandmark);
+        map_landmarks_carsees.push_back(mylandmark);
         
       }  
       
     }
     
-    // 3a associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_car)
-    dataAssociation(map_landmarks_car, observations_gc); //ur
-    //dataAssociation(observations_gc, map_landmarks_car); 
+    // 3a associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_carsees)
+    dataAssociation(map_landmarks_carsees, observations_gc); //ur
+    //dataAssociation(observations_gc, map_landmarks_carsees); 
     
-      checkoutput();
+    checkoutput();
       
-    // 4 use actual distance between map_landmarks_car & observations_gc to update weights
+    // reinitialze weights
+    particles[k].weight = 1.0;
+      
+    // 4 use actual distance between map_landmarks_carsees & observations_gc to update weights
     // ============================================================================================
     
-    cout << "observations_gc.size()=" << observations_gc.size() << endl;
-    cout << "map_landmarks_car.size()=" << map_landmarks_car.size() << endl;
+    //cout << "observations_gc.size()=" << observations_gc.size() << endl;
+    //cout << "map_landmarks_carsees.size()=" << map_landmarks_carsees.size() << endl;
+    
+            cout << endl; 
+            cout << "===OBERSERVATIONS_GC===================" << endl;;
+                
+            for (int i=0;i<observations_gc.size();i++) {
+              cout << observations_gc[i].id << " ";
+              cout << observations_gc[i].x << " ";
+              cout << observations_gc[i].y << endl;
+            }    
+            
+            cout << "===MAP_LANDMARK_CARSEES================" << endl;;
+             for (int i=0;i<map_landmarks_carsees.size();i++) {
+              cout << map_landmarks_carsees[i].id << " ";
+              cout << map_landmarks_carsees[i].x << " ";
+              cout << map_landmarks_carsees[i].y << endl;
+            }  
+            
+            cout << "=======================================" << endl;;
+            cout << endl; 
     
     double prob = 1.0;
     
     for (int i=0; i<observations_gc.size(); i++) {
-            
-      cout << "i=" << i << endl;
-            
-      // id of associated map_landmarks_car
+                  
+      // id of associated map_landmarks_carsees
       int iass = observations_gc[i].id;
-      //cout << "iass=" << iass << endl;
-          
+      
       if (iass > 0) {
           
         // local distances between associated landmarks & observations
-        double dx = map_landmarks_car[iass].x - observations_gc[i].x;
-        double dy = map_landmarks_car[iass].y - observations_gc[i].y;
+        double dx = map_landmarks_carsees[iass].x - observations_gc[i].x;
+        double dy = map_landmarks_carsees[iass].y - observations_gc[i].y;
         
         //cout << "<< 2 >>"  << endl; // ### code crashes when this is commented out -> Minith ###
         
         // calculate probability
+        prob = 1.0; //#4
         double sx = std_landmark[0];
         double sy = std_landmark[1];
         double prob1 = 1.0 / (2*M_PI*sx*sy);
@@ -330,17 +386,18 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         double prob3 = exp(prob2);
         prob = prob1 * prob3;
         
-        cout << "prob=" << prob << endl;
+        //cout << "observation: " << i << " prob=" << prob << endl;
       
-      }       
+      }  
+      cout << "k_particle = " << k << " i_observation_gc = " << i << " iass = " << iass << " prob = " << prob << endl;     
       
     }
     
     // 5 update particle weights
     // ============================================================================================
-    particles[k].weight *= prob;
-    //particles[k].weight = prob;    
-    //weights[k] = particles[k].weight; // that cashed the crash
+    //particles[k].weight *= prob;
+    particles[k].weight = prob;    
+    weights[k] = prob; //particles[k].weight; // that cashed the crash
     
   } 
   
@@ -355,12 +412,13 @@ void ParticleFilter::resample() {
   cout << "ParticleFilter::resample..." << endl;
   
   // store all weights in one vector
+/*
   for (int k=0; k<num_particles; k++) {
     
     weights[k] = particles[k].weight;
     
   } 
-  
+*/  
   // generate gaussians
   default_random_engine gen;
   discrete_distribution<> d(weights.begin(), weights.end());
@@ -482,4 +540,28 @@ void ParticleFilter::checkoutput() {
   myfile.close();  
 */
   
+}
+
+
+void ParticleFilter::checkoutput_map_obs() {
+/*
+  cout << endl; 
+  cout << "===OBERSERVATIONS_GC===================" << endl;;
+      
+  for (int i=0;i<observations_gc.size();i++) {
+    cout << observations_gc[i].id << " ";
+    cout << observations_gc[i].x << " ";
+    cout << observations_gc[i].y << endl;
+  }    
+  
+  cout << "===MAP_LANDMARK_CARSEES================" << endl;;
+   for (int i=0;i<map_landmarks_carsees.size();i++) {
+    cout << map_landmarks_carsees[i].id << " ";
+    cout << map_landmarks_carsees[i].x << " ";
+    cout << map_landmarks_carsees[i].y << endl;
+  }  
+  
+  cout << "=======================================" << endl;;
+  cout << endl; 
+*/  
 }
