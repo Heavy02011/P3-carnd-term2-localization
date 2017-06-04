@@ -72,7 +72,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   is_initialized = true;
   
   checkoutput();
-    
+  
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
@@ -90,7 +90,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   double yf;   
   double thetaf;
   
-   // generate noise
+  // generate noise
   normal_distribution<double> dist_x(0.0, std_pos[0]);
   normal_distribution<double> dist_y(0.0, std_pos[1]);
   normal_distribution<double> dist_theta(0.0, std_pos[2]); 
@@ -135,7 +135,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     particles[k].theta += dist_theta(gen);
     
   }
-    checkoutput();
+    //checkoutput();
 
 }
 
@@ -159,12 +159,14 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
             cout << "=== before ============================" << endl;;              
             cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
              for (int i=0;i<predicted.size();i++) {
+              cout << i << " ";
               cout << predicted[i].id << " ";
               cout << predicted[i].x << " ";
               cout << predicted[i].y << endl;
             }  
             cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
             for (int i=0;i<observations.size();i++) {
+              cout << i << " ";
               cout << observations[i].id << " ";
               cout << observations[i].x << " ";
               cout << observations[i].y << endl;
@@ -213,12 +215,14 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
             cout << "=== after =============================" << endl;;              
             cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
              for (int i=0;i<predicted.size();i++) {
+              cout << i << " ";
               cout << predicted[i].id << " ";
               cout << predicted[i].x << " ";
               cout << predicted[i].y << endl;
             }  
             cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
             for (int i=0;i<observations.size();i++) {
+              cout << i << " ";
               cout << observations[i].id << " ";
               cout << observations[i].x << " ";
               cout << observations[i].y << endl;
@@ -226,6 +230,13 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
             
             cout << "=======================================" << endl;;
             cout << endl;
+            
+            
+            for (int j=0; j<observations.size(); j++) {
+              int iass = observations[j].id;
+              cout << "obs: " << observations[j].x << " " << observations[j].y << " map: " << predicted[iass].y << " " << predicted[iass].y << endl;
+            }
+            
     cout << "ParticleFilter::dataAssociation...finished" << endl; 
     
   
@@ -262,6 +273,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   cout << "weights.size()=" << weights.size() << endl;
   cout << "particles.size()=" << particles.size() << endl;  
 */
+  
+            cout << endl; 
+            cout << "=== MAP_LANDMARKS=======================" << endl;;
+            for (int i=0;i<map_landmarks.landmark_list.size();i++) {
+              cout << i << " ";
+              cout << map_landmarks.landmark_list[i].id_i << " ";
+              cout << map_landmarks.landmark_list[i].x_f << " ";
+              cout << map_landmarks.landmark_list[i].y_f << endl;
+            }  
+            cout << "=======================================" << endl;;
+            cout << endl; 
   
   // 1 loop over all particles
   // ============================================================================================
@@ -330,7 +352,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     dataAssociation(map_landmarks_carsees, observations_gc); //ur
     //dataAssociation(observations_gc, map_landmarks_carsees); 
     
-    checkoutput();
+    //checkoutput();
       
     // reinitialze weights
     particles[k].weight = 1.0;
@@ -389,7 +411,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         //cout << "observation: " << i << " prob=" << prob << endl;
       
       }  
-      cout << "k_particle = " << k << " i_observation_gc = " << i << " iass = " << iass << " prob = " << prob << endl;     
+      //cout << "k_particle = " << k << " i_observation_gc = " << i << " iass = " << iass << " prob = " << prob << endl;  
+                 //int iass = observations_gc[i].id;
+      cout << "k_particle = " << k << " obs: " << observations_gc[i].x << " " << observations_gc[i].y << " map: iass = " << iass << " " << map_landmarks_carsees[iass].y << " " << map_landmarks_carsees[iass].y << " prob = " << prob << endl;   
       
     }
     
@@ -437,6 +461,8 @@ void ParticleFilter::resample() {
   
   // now set the new particles to the original vector
   particles = particles_new;
+  
+  checkoutput();
 
 /*
     // https://discussions.udacity.com/t/resampling-algorithm-using-resampling-wheel/241313/2
@@ -540,28 +566,4 @@ void ParticleFilter::checkoutput() {
   myfile.close();  
 */
   
-}
-
-
-void ParticleFilter::checkoutput_map_obs() {
-/*
-  cout << endl; 
-  cout << "===OBERSERVATIONS_GC===================" << endl;;
-      
-  for (int i=0;i<observations_gc.size();i++) {
-    cout << observations_gc[i].id << " ";
-    cout << observations_gc[i].x << " ";
-    cout << observations_gc[i].y << endl;
-  }    
-  
-  cout << "===MAP_LANDMARK_CARSEES================" << endl;;
-   for (int i=0;i<map_landmarks_carsees.size();i++) {
-    cout << map_landmarks_carsees[i].id << " ";
-    cout << map_landmarks_carsees[i].x << " ";
-    cout << map_landmarks_carsees[i].y << endl;
-  }  
-  
-  cout << "=======================================" << endl;;
-  cout << endl; 
-*/  
 }
