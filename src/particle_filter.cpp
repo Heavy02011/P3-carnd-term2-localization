@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 51;
+  num_particles = 4;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -70,6 +70,8 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   
   // set initializer flag 
   is_initialized = true;
+  
+  checkoutput();
     
 }
 
@@ -88,6 +90,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   double yf;   
   double thetaf;
   
+   // generate noise
+  normal_distribution<double> dist_x(0.0, std_pos[0]);
+  normal_distribution<double> dist_y(0.0, std_pos[1]);
+  normal_distribution<double> dist_theta(0.0, std_pos[2]); 
+  
   // loop over all particles  
   for (int k=0; k<num_particles; k++) {
   
@@ -96,13 +103,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     double yp = particles[k].y;
     double thetap = particles[k].theta;
     
-    // generate noise
-    normal_distribution<double> dist_x(0.0, std_pos[0]);
-    normal_distribution<double> dist_y(0.0, std_pos[1]);
-    normal_distribution<double> dist_theta(0.0, std_pos[2]); 
-    
     // particle state after prediction
-    if (yaw_rate > 0.0001) { // turning
+    if (yaw_rate > 0.00001) { // turning
       
       xf = xp + velocity / yaw_rate * (sin(thetap + yaw_rate * delta_t) - sin(thetap));
       yf = yp + velocity / yaw_rate * (cos(thetap) - cos(thetap + yaw_rate * delta_t));   
@@ -133,6 +135,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     particles[k].theta += dist_theta(gen);
     
   }
+    checkoutput();
 
 }
 
@@ -222,12 +225,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   cout << "particles.size()=" << particles.size() << endl;  
 */
   
-  // observations in global map coordinates
-  vector<LandmarkObs> observations_gc;
-  
-  // map landmarks seen by the car
-  vector<LandmarkObs> map_landmarks_car;
-  
   // 1 loop over all particles
   // ============================================================================================
   
@@ -236,6 +233,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     double yp = particles[k].y;
     double thetap = particles[k].theta;
     //cout << k << "---> " << xp << " " << yp << " " << thetap << endl;
+    
+    // observations in global map coordinates
+    vector<LandmarkObs> observations_gc;
+    
+    // map landmarks seen by the car
+    vector<LandmarkObs> map_landmarks_car;    
     
     // initialize actual distance between observation and landmark
     double r_obs2landmark;
@@ -287,7 +290,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // 3a associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_car)
     dataAssociation(map_landmarks_car, observations_gc); 
     
-    
+      checkoutput();
+      
     // 4 use actual distance between map_landmarks_car & observations_gc to update weights
     // ============================================================================================
     
@@ -298,7 +302,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
     for (int i=0; i<observations_gc.size(); i++) {
             
-      //cout << "i=" << i << endl;
+      cout << "i=" << i << endl;
             
       // id of associated map_landmarks_car
       int iass = observations_gc[i].id;
@@ -322,7 +326,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         double prob3 = exp(prob2);
         prob = prob1 * prob3;
         
-        //cout << "prob=" << prob << endl;
+        cout << "prob=" << prob << endl;
       
       }       
       
@@ -440,7 +444,23 @@ string ParticleFilter::getSenseY(Particle best)
  */
  
 void ParticleFilter::checkoutput() {
-  
+
+  cout << endl; 
+  cout << "===PARTICLES============================" << endl;;
+      
+   for (int i=0;i<num_particles;i++) {
+    cout << particles[i].id << " ";
+    cout << particles[i].x << " ";
+    cout << particles[i].y << " ";
+    cout << particles[i].theta << " ";
+    cout << particles[i].weight << endl;
+  }     
+ 
+   cout << "=======================================" << endl;;
+   cout << endl; 
+   
+ 
+ /*  
   ofstream myfile;
   myfile.open ("log.txt");
   
@@ -453,7 +473,9 @@ void ParticleFilter::checkoutput() {
     myfile << particles[i].x << " ";
     myfile << particles[i].y << " ";
     myfile << particles[i].theta << endl;
-  }      
+  }    
+
   myfile.close();  
+*/
   
 }
