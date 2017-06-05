@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 1;
+  num_particles = 100;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -82,10 +82,10 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   //  http://www.cplusplus.com/reference/random/default_random_engine/
 
   cout << "ParticleFilter::prediction..." << endl;
-            cout << "=======================================" << endl;
-            cout << "velocity = " << velocity << " " << yaw_rate << endl;
-            cout << "=======================================" << endl;
-            cout << endl; 
+  cout << "=======================================" << endl;
+  cout << "velocity = " << velocity << " " << yaw_rate << endl;
+  cout << "=======================================" << endl;
+  cout << endl; 
             
   // generate gaussians
   default_random_engine gen;  
@@ -139,111 +139,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     particles[k].theta += dist_theta(gen);
     
   }
-    //checkoutput();
+  checkoutput();
 
-}
-
-void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
-	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
-	//   observed measurement to this particular landmark.
-	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
-	//   implement this method and use it as a helper during the updateWeights phase.
-  
-  // calling with --> dataAssociation(map_landmarks_carsees, observations_gc); 
-
-  cout << "ParticleFilter::dataAssociation..." << endl;
-  
-  double BIGNUMBER = 100000000;    
-  int    index4smallestdist;
-  double smallestdist;
-  
-  //cout << "observations.size()=" << observations.size() << endl;
-  //cout << "predicted.size()=" << predicted.size() << endl; 
-            cout << endl; 
-            cout << "=== before ============================" << endl;;              
-            cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
-             for (int i=0;i<predicted.size();i++) {
-              cout << i << " ";
-              cout << predicted[i].id << " ";
-              cout << predicted[i].x << " ";
-              cout << predicted[i].y << endl;
-            }  
-            cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
-            for (int i=0;i<observations.size();i++) {
-              cout << i << " ";
-              cout << observations[i].id << " ";
-              cout << observations[i].x << " ";
-              cout << observations[i].y << endl;
-            }  
-            
-            cout << "=======================================" << endl;;
-            cout << endl; 
-            
-
-  if (predicted.size() > 0) {
-  
-    for (int j=0; j<observations.size(); j++) {
-      
-      double xobs = observations[j].x;      
-      double yobs = observations[j].y;
-    
-      // before restarting for next observation reset minimum distance
-      smallestdist = BIGNUMBER; //#1
-      
-      for (int i=0; i<predicted.size(); i++) {
-        
-        double x = predicted[i].x;
-        double y = predicted[i].y;      
-
-        // determine distance  
-        double distance = dist(x, y, xobs, yobs); 
-        
-        if (distance < smallestdist) {
-          
-          // set the smallest distance
-          smallestdist = distance;
-          
-          // get according index of landmark
-          index4smallestdist = i;  //#2
-        
-        }
-      
-      }
-      // store nearest neighbor
-      observations[j].id = index4smallestdist; //#3
-    
-    }
-    
-  }
-            cout << endl; 
-            cout << "=== after =============================" << endl;;              
-            cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
-             for (int i=0;i<predicted.size();i++) {
-              cout << i << " ";
-              cout << predicted[i].id << " ";
-              cout << predicted[i].x << " ";
-              cout << predicted[i].y << endl;
-            }  
-            cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
-            for (int i=0;i<observations.size();i++) {
-              cout << i << " ";
-              cout << observations[i].id << " ";
-              cout << observations[i].x << " ";
-              cout << observations[i].y << endl;
-            }  
-            
-            cout << "=======================================" << endl;;
-            cout << endl;
-            
-            
-            for (int j=0; j<observations.size(); j++) {
-              int iass = observations[j].id;
-              cout << "obs: " << observations[j].x << " " << observations[j].y << " map: " << predicted[iass].y << " " << predicted[iass].y << endl;
-            }
-            
-    cout << "ParticleFilter::dataAssociation...finished" << endl; 
-    
-  
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -289,6 +186,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   cout << endl; 
   
 */  
+  
   // 1 loop over all particles
   // ============================================================================================
   
@@ -356,17 +254,58 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       
     }
     
-    // 3a associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_carsees)
-    dataAssociation(map_landmarks_carsees, observations_gc); //ur
-    //dataAssociation(observations_gc, map_landmarks_carsees); 
+    // 4 associate id of closest landmarks to measurements (observations_gc holds index of associated map_landmarks_carsees)
+    // ============================================================================================
     
-    //checkoutput();
+    
+    cout << "ParticleFilter::dataAssociation..." << endl;
+  
+    double BIGNUMBER = 1.0e100;    
+    int    index4smallestdist;
+    double smallestdist;
+    
+  
+    if (map_landmarks_carsees.size() > 0) {
+    
+      for (int j=0; j<observations_gc.size(); j++) {
+        
+        double xobs = observations_gc[j].x;      
+        double yobs = observations_gc[j].y;
+      
+        // before restarting for next observation reset minimum distance
+        smallestdist = BIGNUMBER; //#1
+        
+        for (int i=0; i<map_landmarks_carsees.size(); i++) {
+          
+          double x = map_landmarks_carsees[i].x;
+          double y = map_landmarks_carsees[i].y;      
+  
+          // determine distance  
+          double distance = dist(x, y, xobs, yobs); 
+          
+          if (distance < smallestdist) {
+            
+            // set the smallest distance
+            smallestdist = distance;
+            
+            // get according index of landmark
+            index4smallestdist = i;  //#2
+          
+          }
+        
+        }
+        // store nearest neighbor
+        observations_gc[j].id = index4smallestdist; //#3  #### check this "one" ####
+      
+      }
+      
+    }
       
     // reinitialze weights
     particles[k].weight = 1.0;
     weights[k] = 1.0;
       
-    // 4 use actual distance between map_landmarks_carsees & observations_gc to update weights
+    // 5 use actual distance between map_landmarks_carsees & observations_gc to update weights
     // ============================================================================================
     
     //cout << "observations_gc.size()=" << observations_gc.size() << endl;
@@ -425,7 +364,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         weights[k] = particles[k].weight;
       }
     
-    // 5 update particle weights
+    // 6 update particle weights
     // ============================================================================================
     //particles[k].weight *= prob;
     //particles[k].weight = prob;    
@@ -576,3 +515,108 @@ void ParticleFilter::checkoutput() {
 */
   
 }
+
+/*
+void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
+	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
+	//   observed measurement to this particular landmark.
+	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
+	//   implement this method and use it as a helper during the updateWeights phase.
+  
+  // calling with --> dataAssociation(map_landmarks_carsees, observations_gc); 
+
+  cout << "ParticleFilter::dataAssociation..." << endl;
+  
+  double BIGNUMBER = 100000000;    
+  int    index4smallestdist;
+  double smallestdist;
+  
+  //cout << "observations.size()=" << observations.size() << endl;
+  //cout << "predicted.size()=" << predicted.size() << endl; 
+            cout << endl; 
+            cout << "=== before ============================" << endl;;              
+            cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
+             for (int i=0;i<predicted.size();i++) {
+              cout << i << " ";
+              cout << predicted[i].id << " ";
+              cout << predicted[i].x << " ";
+              cout << predicted[i].y << endl;
+            }  
+            cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
+            for (int i=0;i<observations.size();i++) {
+              cout << i << " ";
+              cout << observations[i].id << " ";
+              cout << observations[i].x << " ";
+              cout << observations[i].y << endl;
+            }  
+            
+            cout << "=======================================" << endl;;
+            cout << endl; 
+            
+
+  if (predicted.size() > 0) {
+  
+    for (int j=0; j<observations.size(); j++) {
+      
+      double xobs = observations[j].x;      
+      double yobs = observations[j].y;
+    
+      // before restarting for next observation reset minimum distance
+      smallestdist = BIGNUMBER; //#1
+      
+      for (int i=0; i<predicted.size(); i++) {
+        
+        double x = predicted[i].x;
+        double y = predicted[i].y;      
+
+        // determine distance  
+        double distance = dist(x, y, xobs, yobs); 
+        
+        if (distance < smallestdist) {
+          
+          // set the smallest distance
+          smallestdist = distance;
+          
+          // get according index of landmark
+          index4smallestdist = i;  //#2
+        
+        }
+      
+      }
+      // store nearest neighbor
+      observations[j].id = index4smallestdist; //#3
+    
+    }
+    
+  }
+            cout << endl; 
+            cout << "=== after =============================" << endl;;              
+            cout << "===MAP_LANDMARK_CARSEES / predicted ===" << endl;;
+             for (int i=0;i<predicted.size();i++) {
+              cout << i << " ";
+              cout << predicted[i].id << " ";
+              cout << predicted[i].x << " ";
+              cout << predicted[i].y << endl;
+            }  
+            cout << "===OBERSERVATIONS_GC / observations ===" << endl;;    
+            for (int i=0;i<observations.size();i++) {
+              cout << i << " ";
+              cout << observations[i].id << " ";
+              cout << observations[i].x << " ";
+              cout << observations[i].y << endl;
+            }  
+            
+            cout << "=======================================" << endl;;
+            cout << endl;
+            
+            
+            for (int j=0; j<observations.size(); j++) {
+              int iass = observations[j].id;
+              cout << "obs: " << observations[j].x << " " << observations[j].y << " map: " << predicted[iass].y << " " << predicted[iass].y << endl;
+            }
+            
+    cout << "ParticleFilter::dataAssociation...finished" << endl; 
+    
+  
+}
+*/
