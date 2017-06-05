@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 2;
+  num_particles = 1;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -82,7 +82,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   //  http://www.cplusplus.com/reference/random/default_random_engine/
 
   cout << "ParticleFilter::prediction..." << endl;
-    
+            cout << "=======================================" << endl;
+            cout << "velocity = " << velocity << " " << yaw_rate << endl;
+            cout << "=======================================" << endl;
+            cout << endl; 
+            
   // generate gaussians
   default_random_engine gen;  
   
@@ -179,7 +183,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
   if (predicted.size() > 0) {
   
     for (int j=0; j<observations.size(); j++) {
-      //cout << "j=" << j << endl;  
+      
       double xobs = observations[j].x;      
       double yobs = observations[j].y;
     
@@ -187,7 +191,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
       smallestdist = BIGNUMBER; //#1
       
       for (int i=0; i<predicted.size(); i++) {
-        //cout << "i=" << i << endl;    
+        
         double x = predicted[i].x;
         double y = predicted[i].y;      
 
@@ -272,19 +276,19 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   cout << "map_landmarks.landmark_list.size()=" << map_landmarks.landmark_list.size() << endl; 
   cout << "weights.size()=" << weights.size() << endl;
   cout << "particles.size()=" << particles.size() << endl;  
-*/
   
-            cout << endl; 
-            cout << "=== MAP_LANDMARKS=======================" << endl;;
-            for (int i=0;i<map_landmarks.landmark_list.size();i++) {
-              cout << i << " ";
-              cout << map_landmarks.landmark_list[i].id_i << " ";
-              cout << map_landmarks.landmark_list[i].x_f << " ";
-              cout << map_landmarks.landmark_list[i].y_f << endl;
-            }  
-            cout << "=======================================" << endl;;
-            cout << endl; 
+  cout << endl; 
+  cout << "=== MAP_LANDMARKS=======================" << endl;;
+  for (int i=0;i<map_landmarks.landmark_list.size();i++) {
+    cout << i << " ";
+    cout << map_landmarks.landmark_list[i].id_i << " ";
+    cout << map_landmarks.landmark_list[i].x_f << " ";
+    cout << map_landmarks.landmark_list[i].y_f << endl;
+  }  
+  cout << "=======================================" << endl;;
+  cout << endl; 
   
+*/  
   // 1 loop over all particles
   // ============================================================================================
   
@@ -301,12 +305,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // map landmarks seen by the car
     vector<LandmarkObs> map_landmarks_carsees;    
     
-    // initialize actual distance between observation and landmark
-    double r_obs2landmark;
-    r_obs2landmark = sensor_range;
-    
     // 2 transform observations from vehicle into global map coordinates and store them
     // ============================================================================================
+    
+    // clear vectors from previous particle
+    observations_gc.clear();
     
     for (int i=0; i<observations.size(); i++) { 
       
@@ -328,18 +331,23 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // 3 eliminate all landmarks that are beyond sensor_range: compare landmarks to point distances
     // ============================================================================================
     
+    // clear vectors from previous particle
+    map_landmarks_carsees.clear();
+    
     for (int i=0; i<map_landmarks.landmark_list.size(); i++) {
             
       // calculate distance between landmarks and measurements in map coordinates
       double mydist = dist(map_landmarks.landmark_list[i].x_f, map_landmarks.landmark_list[i].y_f, xp, yp);  
             
-      if (mydist < sensor_range) {
+      if (mydist <= sensor_range) { //#5
         
         // generate landmark object
         LandmarkObs mylandmark;
         
         // store the actual values into it
-        mylandmark = {map_landmarks.landmark_list[i].id_i, map_landmarks.landmark_list[i].x_f, map_landmarks.landmark_list[i].y_f};
+        mylandmark = {map_landmarks.landmark_list[i].id_i, 
+                      map_landmarks.landmark_list[i].x_f, 
+                      map_landmarks.landmark_list[i].y_f};
         
         // save for later use
         map_landmarks_carsees.push_back(mylandmark);
@@ -356,6 +364,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       
     // reinitialze weights
     particles[k].weight = 1.0;
+    weights[k] = 1.0;
       
     // 4 use actual distance between map_landmarks_carsees & observations_gc to update weights
     // ============================================================================================
@@ -383,45 +392,45 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             cout << endl; 
     
     double prob = 1.0;
-    
+    double sx = std_landmark[0];
+    double sy = std_landmark[1];
+          
     for (int i=0; i<observations_gc.size(); i++) {
                   
       // id of associated map_landmarks_carsees
       int iass = observations_gc[i].id;
       
-      if (iass > 0) {
+      //if (iass > 0) {
           
-        // local distances between associated landmarks & observations
-        double dx = map_landmarks_carsees[iass].x - observations_gc[i].x;
-        double dy = map_landmarks_carsees[iass].y - observations_gc[i].y;
-        
-        //cout << "<< 2 >>"  << endl; // ### code crashes when this is commented out -> Minith ###
-        
-        // calculate probability
-        prob = 1.0; //#4
-        double sx = std_landmark[0];
-        double sy = std_landmark[1];
-        double prob1 = 1.0 / (2*M_PI*sx*sy);
-        double prob2x = dx * dx / (2.0*sx*sx);
-        double prob2y = dy * dy / (2.0*sy*sy);
-        double prob2 = -1.0 * (prob2x + prob2y);
-        double prob3 = exp(prob2);
-        prob = prob1 * prob3;
-        
-        //cout << "observation: " << i << " prob=" << prob << endl;
+      // local distances between associated landmarks & observations
+      double dx = map_landmarks_carsees[iass].x - observations_gc[i].x;
+      double dy = map_landmarks_carsees[iass].y - observations_gc[i].y;
+      double d = dist(map_landmarks_carsees[iass].x,map_landmarks_carsees[iass].y, observations_gc[i].x,observations_gc[i].y);
+              
+      // calculate probability
+      prob = 1.0; //#4
+      double prob1 = 1.0 / (2*M_PI*sx*sy);
+      double prob2x = dx * dx / (2.0*sx*sx);
+      double prob2y = dy * dy / (2.0*sy*sy);
+      double prob2 = -1.0 * (prob2x + prob2y);
+      double prob3 = exp(prob2);
+      prob = prob1 * prob3;
+              
+      //}  
+      //cout << "k_particle = " << k << " obs: i= " << i << " dx/dy= " << dx << "/" << dy << " dist= " << d << " "<<  observations_gc[i].x << " " << observations_gc[i].y << " map: iass = " << iass << " " << map_landmarks_carsees[iass].x << " " << map_landmarks_carsees[iass].y << " prob = " << prob << endl;   
+      //cout << "k_particle = " << k << " obs: i= " << i <<" " <<  observations_gc[i].x << " " << observations_gc[i].y << " map: iass = " << iass << " " << map_landmarks_carsees[iass].x << " " << map_landmarks_carsees[iass].y << " prob = " << prob << endl;   
+      cout <<  k << " " << i << " " <<  iass <<  " " << observations_gc[i].x << " " << observations_gc[i].y <<  " " << map_landmarks_carsees[iass].x << " " << map_landmarks_carsees[iass].y << "  " << prob << "  " << d << endl; 
       
-      }  
-      //cout << "k_particle = " << k << " i_observation_gc = " << i << " iass = " << iass << " prob = " << prob << endl;  
-                 //int iass = observations_gc[i].id;
-      cout << "k_particle = " << k << " obs: " << observations_gc[i].x << " " << observations_gc[i].y << " map: iass = " << iass << " " << map_landmarks_carsees[iass].y << " " << map_landmarks_carsees[iass].y << " prob = " << prob << endl;   
-      
-    }
+        particles[k].weight *= prob;
+        weights[k] = particles[k].weight;
+      }
     
     // 5 update particle weights
     // ============================================================================================
     //particles[k].weight *= prob;
-    particles[k].weight = prob;    
-    weights[k] = prob; //particles[k].weight; // that cashed the crash
+    //particles[k].weight = prob;    
+    //weights[k] = prob; //particles[k].weight; // that cashed the crash
+    cout << "k_particle = " << k << " prob=" << prob << endl;
     
   } 
   
