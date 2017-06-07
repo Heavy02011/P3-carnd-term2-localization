@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_theta_init(theta, std[2]); 
   
   // 1 Set the number of particles
-  num_particles = 100;
+  num_particles = 50;
   
   // 2 Initialize all particles to first position (based on estimates of 
   //   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -56,9 +56,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 */
   
     // 3 Add random Gaussian noise to each particle. --> https://discussions.udacity.com/t/norm-distribution/249496/3
-    particle.x += dist_x_init(gen);
-    particle.y += dist_y_init(gen);
-    particle.theta += dist_theta_init(gen);
+    particle.x = dist_x_init(gen); // +=
+    particle.y = dist_y_init(gen);// +=
+    particle.theta = dist_theta_init(gen); // +=
     
     // add particle to vector of particles
     particles.push_back(particle);
@@ -95,10 +95,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   double thetaf;
   
   // generate noise
+/*
   normal_distribution<double> dist_x(0.0, std_pos[0]);
   normal_distribution<double> dist_y(0.0, std_pos[1]);
   normal_distribution<double> dist_theta(0.0, std_pos[2]); 
-  
+*/  
   // loop over all particles  
   for (int k=0; k<num_particles; k++) {
   
@@ -108,7 +109,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     double thetap = particles[k].theta;
     
     // particle state after prediction
-    if (yaw_rate > 0.00001) { // turning
+    if (abs(yaw_rate) > 0.00001) { // turning
       
       xf = xp + velocity / yaw_rate * (sin(thetap + yaw_rate * delta_t) - sin(thetap));
       yf = yp + velocity / yaw_rate * (cos(thetap) - cos(thetap + yaw_rate * delta_t));   
@@ -127,16 +128,15 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     particles[k].theta = thetaf; 
     
     // creates a normal (Gaussian) distribution for xf, yf, thetaf
-/*    
+   
     normal_distribution<double> dist_x(xf, std_pos[0]);
     normal_distribution<double> dist_y(yf, std_pos[1]);
     normal_distribution<double> dist_theta(thetaf, std_pos[2]); 
-*/
     
     // add noise to particle
-    particles[k].x += dist_x(gen);
-    particles[k].y += dist_y(gen);
-    particles[k].theta += dist_theta(gen);
+    particles[k].x = dist_x(gen);//+=
+    particles[k].y = dist_y(gen); //+=
+    particles[k].theta = dist_theta(gen); // +=
     
   }
   checkoutput();
@@ -261,7 +261,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     cout << "ParticleFilter::dataAssociation..." << endl;
   
     double BIGNUMBER = 1.0e100;    
-    int    index4smallestdist;
+    unsigned int    index4smallestdist;
     double smallestdist;
     
   
@@ -292,13 +292,22 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             index4smallestdist = i;  //#2
           
           }
+          cout << "j="<<j<<" i="<<i<<" "" << xobs,yobs,xmap,ymap,distance= "<< xobs << " " <<yobs<< " " << x <<" " <<y << " " << distance << " " <<endl;
         
         }
+        cout << "index4smallestdist= " << index4smallestdist << endl; 
+        cout << endl;
+         
+        //cout << "j="<<j<<" i="<<index4smallestdist<<" "" << xobs,yobs,xmap,ymap,distance= "<< xobs << " " <<yobs<< " " << map_landmarks_carsees[index4smallestdist].x <<" " <<map_landmarks_carsees[index4smallestdist].y << " " << distance << " " <<endl;
+        
         // store nearest neighbor
         observations_gc[j].id = index4smallestdist; //#3  #### check this "one" ####
       
       }
       
+    }
+    for (int i=0; i<observations_gc.size(); i++) {
+      cout << "i= "<<i<<" "<<observations_gc[i].id<<endl;
     }
       
     // reinitialze weights
@@ -337,8 +346,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     for (int i=0; i<observations_gc.size(); i++) {
                   
       // id of associated map_landmarks_carsees
-      int iass = observations_gc[i].id;
-      
+      unsigned int iass = observations_gc[i].id;
+            cout << "i= "<<i<<" "<<observations_gc[i].id<<" iass="<<iass<<endl;
       //if (iass > 0) {
           
       // local distances between associated landmarks & observations
