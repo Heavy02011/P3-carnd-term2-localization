@@ -22,7 +22,7 @@ using namespace std;
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 // NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
-  cout << "ParticleFilter::init..." << endl;
+  //cout << "ParticleFilter::init..." << endl;
     
   // generate gaussians
   default_random_engine gen;
@@ -80,13 +80,13 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   // NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
   //  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
   //  http://www.cplusplus.com/reference/random/default_random_engine/
-
+/*
   cout << "ParticleFilter::prediction..." << endl;
   cout << "=======================================" << endl;
   cout << "velocity = " << velocity << " " << yaw_rate << endl;
   cout << "=======================================" << endl;
   cout << endl; 
-            
+*/            
   // generate gaussians
   default_random_engine gen;  
   
@@ -164,7 +164,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   // std::vector<LandmarkObs> observations    landmark observations
   // Map map_landmarks                        map_landmarks
   
-  cout << "ParticleFilter::updateWeights..." << endl;
+  //cout << "ParticleFilter::updateWeights..." << endl;
       
   // test output of input data
 /*
@@ -263,7 +263,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // ============================================================================================
     
     
-    cout << "ParticleFilter::dataAssociation..." << endl;
+    //cout << "ParticleFilter::dataAssociation..." << endl;
   
     double BIGNUMBER = 1.0e100;    
     unsigned int    index4smallestdist;
@@ -353,7 +353,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                   
       // id of associated map_landmarks_carsees
       unsigned int iass = observations_gc[i].id;
-            cout << "i= "<<i<<" "<<observations_gc[i].id<<" iass="<<iass<<endl;
+      
+      //cout << "i= "<<i<<" "<<observations_gc[i].id<<" iass="<<iass<<endl;
       //if (iass > 0) {
           
       // local distances between associated landmarks & observations
@@ -378,10 +379,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
       particles[k].weight *= prob;
     }
-    weights[k] = particles[k].weight;
     
     // 6 update particle weights
     // ============================================================================================
+    
+    weights[k] = particles[k].weight;
     //particles[k].weight *= prob;
     //particles[k].weight = prob;    
     //weights[k] = prob; //particles[k].weight; // that cashed the crash
@@ -397,7 +399,7 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
-  cout << "ParticleFilter::resample..." << endl;
+  //cout << "ParticleFilter::resample..." << endl;
   
   // store all weights in one vector
 /*
